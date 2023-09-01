@@ -1,6 +1,5 @@
 ﻿using EntityFramework.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EntityFramework.Content
 {
@@ -9,11 +8,13 @@ namespace EntityFramework.Content
     {
         public DbSet<Person> Persons { get; set; }
         public DbSet<Department> Departments { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<Hobby> Hobby { get; set; }
 
         public Context()
         {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
+            //Database.EnsureDeleted();
+            //Database.EnsureCreated();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -27,6 +28,21 @@ namespace EntityFramework.Content
             modelBuilder.Entity<Person>().Property(p => p.Name).IsRequired();
 
             modelBuilder.Entity<Department>().Property(p => p.Name).HasColumnName("Title");
+
+            modelBuilder.Entity<Person>()
+                .HasOne(p => p.Department)
+                .WithMany(d => d.Persons)
+                .HasForeignKey(p => p.DepartmentId);
+
+            modelBuilder.Entity<Person>()
+                .HasOne(p => p.Address)
+                .WithOne(a => a.Person)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Person>()
+                .HasMany(p => p.Hobbies)
+                .WithMany(h => h.Persons)
+                .UsingEntity(j => j.ToTable("PersonHobbies"));
         }
     }
 }
